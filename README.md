@@ -4,6 +4,8 @@ A one-to-one realtime chat app.
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/from-referrer/)
 
+Built with [ReactJs](https://reactjs.org/)  and packages like [Redux](https://redux.js.org/) for state management and [Material UI](https://material-ui.com/)  for styles. For backend has been used [NodeJS](https://nodejs.org/en/) - [ExpressJS](https://expressjs.com/) and [SocketIO](https://socket.io/) to the real time communication. All the data is stored in a [Postgres DB](https://www.postgresql.org/) and the link with the app has been made with [Sequelize](https://sequelize.org/master/index.html).
+
 ## Initial Setup
 
 Create the PostgreSQL database (these instructions may need to be adapted for your operating system):
