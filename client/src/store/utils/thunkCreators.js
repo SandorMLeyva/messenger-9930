@@ -5,8 +5,10 @@ import {
   addConversation,
   setNewMessage,
   setSearchedUsers,
+  readMessages,
 } from "../conversations";
 import { gotUser, setFetchingStatus } from "../user";
+import { setActiveChat } from "../activeConversation";
 
 axios.interceptors.request.use(async function (config) {
   const token = await localStorage.getItem("messenger-token");
@@ -72,6 +74,9 @@ export const logout = (id) => async (dispatch) => {
 export const fetchConversations = () => async (dispatch) => {
   try {
     const { data } = await axios.get("/api/conversations");
+    data.forEach(convo => {
+      joinToConversation(convo.id);
+    });
     dispatch(gotConversations(data));
   } catch (error) {
     console.error(error);
@@ -83,12 +88,15 @@ const saveMessage = async (body) => {
   return data;
 };
 
-const sendMessage = (data, body) => {
+const sendMessage = (data) => {
   socket.emit("new-message", {
     message: data.message,
-    recipientId: body.recipientId,
     sender: data.sender,
   });
+};
+
+const joinToConversation = (conversationId) => {
+  socket.emit("join-conversation", conversationId);
 };
 
 // message format to send: {recipientId, text, conversationId}
@@ -97,13 +105,36 @@ export const postMessage = (body) => async (dispatch) => {
   try {
     const data = await saveMessage(body);
 
+    joinToConversation(data.message.conversationId);
     if (!body.conversationId) {
       dispatch(addConversation(body.recipientId, data.message));
     } else {
-      dispatch(setNewMessage(data.message));
+      dispatch(setNewMessage(true, data.message));
+    }
+    
+    sendMessage(data);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const activeChat = (conversation) => async (dispatch) => {
+  try {
+    // mark messages as read
+    if (conversation.id) {
+      await axios.post("/api/conversations/mark", {
+        conversationId: conversation.id,
+        user: conversation.otherUser,
+      });
+
+      socket.emit("read-message", {
+        conversationId: conversation.id,
+        userId: conversation.otherUser.id,
+      });
+      dispatch(readMessages(conversation.id, conversation.otherUser.id, true));
     }
 
-    sendMessage(data, body);
+    dispatch(setActiveChat(conversation.otherUser.id));
   } catch (error) {
     console.error(error);
   }

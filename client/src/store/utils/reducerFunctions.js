@@ -1,13 +1,14 @@
 export const addMessageToStore = (state, payload) => {
-  const { message, sender } = payload;
+  const { message, sender, local } = payload;
   // if sender isn't null, that means the message needs to be put in a brand new convo
   if (sender !== null) {
     const newConvo = {
       id: message.conversationId,
       otherUser: sender,
       messages: [message],
+      latestMessageText: message.text,
+      unreadMessageCount: 1,
     };
-    newConvo.latestMessageText = message.text;
     return [newConvo, ...state];
   }
 
@@ -16,6 +17,7 @@ export const addMessageToStore = (state, payload) => {
       const convoCopy = { ...convo };
       convoCopy.messages.push(message);
       convoCopy.latestMessageText = message.text;
+      if (!local) convoCopy.unreadMessageCount++;
       return convoCopy;
     } else {
       return convo;
@@ -74,9 +76,36 @@ export const addNewConvoToStore = (state, recipientId, message) => {
       convoCopy.id = message.conversationId;
       convoCopy.messages.push(message);
       convoCopy.latestMessageText = message.text;
+      convoCopy.unreadMessageCount = 0;
       return convoCopy;
     } else {
       return convo;
     }
+  });
+};
+
+// Change state of messages and set the count of unread messages to 0
+// [local] is a flag to define whether is the local user or not
+export const setReadMessages = (state, payload) => {
+  const { conversationId, userId, local } = payload;
+  return state.map((convo) => {
+    if (convo.id === conversationId) {
+      const convoCopy = {
+        ...convo,
+      };
+      if (local) {
+        convoCopy.unreadMessageCount = 0;
+      } else {
+        convoCopy.messages = convo.messages.map((message) => {
+          if (message.senderId === userId) {
+            message.read = true;
+          }
+          return message;
+        });
+      }
+
+      return convoCopy;
+    }
+    return convo;
   });
 };

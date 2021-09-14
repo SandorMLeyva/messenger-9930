@@ -32,6 +32,12 @@ const server = http.createServer(app);
 const io = require("socket.io")(server);
 
 io.on("connection", (socket) => {
+
+  socket.on('join-conversation', function(conversationId) {
+    console.log(conversationId);
+    socket.join(conversationId);
+  });
+
   socket.on("go-online", (id) => {
     if (!onlineUsers.includes(id)) {
       onlineUsers.push(id);
@@ -41,9 +47,16 @@ io.on("connection", (socket) => {
   });
 
   socket.on("new-message", (data) => {
-    socket.broadcast.emit("new-message", {
+    socket.to(data.message.conversationId).broadcast.emit("new-message", {
       message: data.message,
       sender: data.sender,
+    });
+  });
+
+  socket.on("read-message", (data) => {
+    socket.to(data.conversationId).broadcast.emit("read-message", {
+      conversationId: data.conversationId,
+      userId: data.userId,
     });
   });
 
