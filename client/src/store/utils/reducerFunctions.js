@@ -85,27 +85,41 @@ export const addNewConvoToStore = (state, recipientId, message) => {
 };
 
 // Change state of messages and set the count of unread messages to 0
-// [local] is a flag to define whether is the local user or not
+// [local] is a flag to define whether the user is local or not
 export const setReadMessages = (state, payload) => {
-  const { conversationId, userId, local } = payload;
-  return state.map((convo) => {
-    if (convo.id === conversationId) {
-      const convoCopy = {
-        ...convo,
-      };
-      if (local) {
-        convoCopy.unreadMessageCount = 0;
-      } else {
-        convoCopy.messages = convo.messages.map((message) => {
-          if (message.senderId === userId) {
-            message.read = true;
-          }
-          return message;
-        });
-      }
+  const { conversationId, userId, local, isActiveChat } = payload;
+  const index = state.findIndex((convo) => convo.id === conversationId);
+  const convoCopy = {
+    ...state[index],
+  };
 
-      return convoCopy;
+  if (local) {
+    if (convoCopy.unreadMessageCount > 0) {
+      convoCopy.unreadMessageCount = 0;
+      state[index] = convoCopy;
+      return [...state];
     }
-    return convo;
-  });
+  } else {
+    const isRead = convoCopy.messages? convoCopy.messages.some((msg) => !msg.read && msg.senderId === userId): false;
+    // if at least one message is unread, change the state
+    if (isRead) {
+      convoCopy.unreadMessageCount = isActiveChat
+        ? 0
+        : convoCopy.unreadMessageCount;
+
+      convoCopy.messages = convoCopy.messages.map((message) => {
+        if (message.senderId === userId && !message.read) {
+          return {
+            ...message,
+            read: true
+          }
+        }
+        return message;
+      });
+
+      state[index] = convoCopy;
+      return [...state];
+    }
+  }
+  return state;
 };

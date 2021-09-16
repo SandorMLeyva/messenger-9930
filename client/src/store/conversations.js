@@ -69,10 +69,10 @@ export const addConversation = (recipientId, newMessage) => {
   };
 };
 
-export const readMessages = (conversationId, userId, local) => {
+export const readMessages = (conversationId, userId, local, isActiveChat) => {
   return {
     type: READ_MESSAGES,
-    payload: { conversationId, userId, local },
+    payload: { conversationId, userId, local, isActiveChat },
   };
 };
 

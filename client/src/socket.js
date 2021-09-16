@@ -31,7 +31,7 @@ socket.on("connect", () => {
   });
 
   socket.on("read-message", (data) => {
-    store.dispatch(readMessages(data.conversationId, data.userId, false));
+    store.dispatch(readMessages(data.conversationId, data.userId, false, false));
   });
 });
 

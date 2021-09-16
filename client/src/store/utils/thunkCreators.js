@@ -74,7 +74,7 @@ export const logout = (id) => async (dispatch) => {
 export const fetchConversations = () => async (dispatch) => {
   try {
     const { data } = await axios.get("/api/conversations");
-    data.forEach(convo => {
+    data.forEach((convo) => {
       joinToConversation(convo.id);
     });
     dispatch(gotConversations(data));
@@ -95,7 +95,7 @@ const sendMessage = (data) => {
   });
 };
 
-const joinToConversation = (conversationId,requestUser) =>  {
+const joinToConversation = (conversationId, requestUser) => {
   socket.emit("join-conversation", conversationId, requestUser);
 };
 
@@ -108,14 +108,11 @@ export const postMessage = (body) => async (dispatch) => {
     if (!body.conversationId) {
       joinToConversation(data.message.conversationId, body.recipientId);
       dispatch(addConversation(body.recipientId, data.message));
-      setTimeout(()=> sendMessage(data), 500);
+      setTimeout(() => sendMessage(data), 500);
     } else {
       dispatch(setNewMessage(true, data.message));
       sendMessage(data);
     }
-
-    
-    
   } catch (error) {
     console.error(error);
   }
@@ -125,22 +122,24 @@ export const activeChat = (conversation) => async (dispatch) => {
   try {
     // mark messages as read
     if (conversation.id) {
-      await axios.post("/api/conversations/mark", {
-        conversationId: conversation.id,
-        user: conversation.otherUser,
-      });
-
-      socket.emit("read-message", {
-        conversationId: conversation.id,
-        userId: conversation.otherUser.id,
-      });
-      dispatch(readMessages(conversation.id, conversation.otherUser.id, true));
+      await readMessage(conversation, true, false)(dispatch);
+      dispatch(setActiveChat(conversation.otherUser.id));
     }
-
-    dispatch(setActiveChat(conversation.otherUser.id));
   } catch (error) {
     console.error(error);
   }
+};
+
+export const readMessage = (conversation, local, isActiveChat) => async (dispatch) => {
+  await axios.post("/api/conversations/mark", {
+    conversationId: conversation.id,
+    user: conversation.otherUser,
+  });
+  socket.emit("read-message", {
+    conversationId: conversation.id,
+    userId: conversation.otherUser.id,
+  });
+  dispatch(readMessages(conversation.id, conversation.otherUser.id, local, isActiveChat));
 };
 
 export const searchUsers = (searchTerm) => async (dispatch) => {
