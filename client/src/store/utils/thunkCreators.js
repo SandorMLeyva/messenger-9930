@@ -95,8 +95,8 @@ const sendMessage = (data) => {
   });
 };
 
-const joinToConversation = (conversationId) => {
-  socket.emit("join-conversation", conversationId);
+const joinToConversation = (conversationId,requestUser) =>  {
+  socket.emit("join-conversation", conversationId, requestUser);
 };
 
 // message format to send: {recipientId, text, conversationId}
@@ -105,14 +105,17 @@ export const postMessage = (body) => async (dispatch) => {
   try {
     const data = await saveMessage(body);
 
-    joinToConversation(data.message.conversationId);
     if (!body.conversationId) {
+      joinToConversation(data.message.conversationId, body.recipientId);
       dispatch(addConversation(body.recipientId, data.message));
+      setTimeout(()=> sendMessage(data), 500);
     } else {
       dispatch(setNewMessage(true, data.message));
+      sendMessage(data);
     }
+
     
-    sendMessage(data);
+    
   } catch (error) {
     console.error(error);
   }
