@@ -1,13 +1,14 @@
 export const addMessageToStore = (state, payload) => {
-  const { message, sender } = payload;
+  const { message, sender, local } = payload;
   // if sender isn't null, that means the message needs to be put in a brand new convo
   if (sender !== null) {
     const newConvo = {
       id: message.conversationId,
       otherUser: sender,
       messages: [message],
+      latestMessageText: message.text,
+      unreadMessageCount: 1,
     };
-    newConvo.latestMessageText = message.text;
     return [newConvo, ...state];
   }
 
@@ -16,6 +17,7 @@ export const addMessageToStore = (state, payload) => {
       const convoCopy = { ...convo };
       convoCopy.messages.push(message);
       convoCopy.latestMessageText = message.text;
+      if (!local) convoCopy.unreadMessageCount++;
       return convoCopy;
     } else {
       return convo;
@@ -74,9 +76,50 @@ export const addNewConvoToStore = (state, recipientId, message) => {
       convoCopy.id = message.conversationId;
       convoCopy.messages.push(message);
       convoCopy.latestMessageText = message.text;
+      convoCopy.unreadMessageCount = 0;
       return convoCopy;
     } else {
       return convo;
     }
   });
+};
+
+// Change state of messages and set the count of unread messages to 0
+// [local] is a flag to define whether the user is local or not
+export const setReadMessages = (state, payload) => {
+  const { conversationId, userId, local, isActiveChat } = payload;
+  const index = state.findIndex((convo) => convo.id === conversationId);
+  const convoCopy = {
+    ...state[index],
+  };
+
+  if (local) {
+    if (convoCopy.unreadMessageCount > 0) {
+      convoCopy.unreadMessageCount = 0;
+      state[index] = convoCopy;
+      return [...state];
+    }
+  } else {
+    const isRead = convoCopy.messages? convoCopy.messages.some((msg) => !msg.read && msg.senderId === userId): false;
+    // if at least one message is unread, change the state
+    if (isRead) {
+      convoCopy.unreadMessageCount = isActiveChat
+        ? 0
+        : convoCopy.unreadMessageCount;
+
+      convoCopy.messages = convoCopy.messages.map((message) => {
+        if (message.senderId === userId && !message.read) {
+          return {
+            ...message,
+            read: true
+          }
+        }
+        return message;
+      });
+
+      state[index] = convoCopy;
+      return [...state];
+    }
+  }
+  return state;
 };

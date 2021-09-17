@@ -68,11 +68,40 @@ router.get("/", async (req, res, next) => {
       }
 
       // set properties for notification count and latest message preview
-      convoJSON.latestMessageText = convoJSON.messages[convoJSON.messages.length-1].text;
+      convoJSON.latestMessageText =
+        convoJSON.messages[convoJSON.messages.length - 1].text;
+      convoJSON.unreadMessageCount = convoJSON.messages.reduce(
+        (acc, message) =>
+          !message.read && message.senderId !== userId ? acc + 1 : acc,
+        0
+      );
       conversations[i] = convoJSON;
     }
 
     res.json(conversations);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/mark", async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+    
+    const { conversationId, user } = req.body;
+
+    await Message.update(
+      { read: true },
+      {
+        where: {
+          [Op.and]: [{ senderId: user.id }, { conversationId: conversationId }],
+        },
+      }
+    );
+
+    res.json({});
   } catch (error) {
     next(error);
   }
