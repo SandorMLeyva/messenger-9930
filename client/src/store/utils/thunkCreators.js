@@ -122,25 +122,33 @@ export const activeChat = (conversation) => async (dispatch) => {
   try {
     // mark messages as read
     if (conversation.id) {
-      await readMessage(conversation, true, false)(dispatch);
-      dispatch(setActiveChat(conversation.otherUser.id));
+      await readMessage(conversation.id, conversation.otherUser.id, true, false)(dispatch);
     }
+    dispatch(setActiveChat(conversation.otherUser.id));
   } catch (error) {
     console.error(error);
   }
 };
 
-export const readMessage = (conversation, local, isActiveChat) => async (dispatch) => {
-  await axios.post("/api/conversations/mark", {
-    conversationId: conversation.id,
-    user: conversation.otherUser,
-  });
-  socket.emit("read-message", {
-    conversationId: conversation.id,
-    userId: conversation.otherUser.id,
-  });
-  dispatch(readMessages(conversation.id, conversation.otherUser.id, local, isActiveChat));
-};
+export const readMessage =
+  (conversationId, userId, local, isActiveChat) => async (dispatch) => {
+    await axios.post("/api/conversations/mark", {
+      conversationId: conversationId,
+      userId: userId,
+    });
+    socket.emit("read-message", {
+      conversationId: conversationId,
+      userId: userId,
+    });
+    dispatch(
+      readMessages(
+        conversationId,
+        userId,
+        local,
+        isActiveChat
+      )
+    );
+  };
 
 export const searchUsers = (searchTerm) => async (dispatch) => {
   try {

@@ -90,13 +90,13 @@ router.post("/mark", async (req, res, next) => {
       return res.sendStatus(401);
     }
     
-    const { conversationId, user } = req.body;
+    const { conversationId, userId } = req.body;
 
     await Message.update(
       { read: true },
       {
         where: {
-          [Op.and]: [{ senderId: user.id }, { conversationId: conversationId }],
+          [Op.and]: [{ senderId: userId }, { conversationId: conversationId }],
         },
       }
     );

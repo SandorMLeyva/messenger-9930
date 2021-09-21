@@ -44,8 +44,8 @@ const Chat = (props) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    activeChat: (id) => {
-      dispatch(activeChat(id));
+    activeChat: (conversation) => {
+      dispatch(activeChat(conversation));
     }
   };
 };

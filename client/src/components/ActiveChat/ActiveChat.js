@@ -27,10 +27,10 @@ const ActiveChat = (props) => {
   const conversation = props.conversation || {};
 
   useEffect(() => {
-    if (props.conversation) {
-      props.readMessage(props.conversation, false, true);
+    if (conversation.id && conversation.otherUser) {
+      props.readMessage(conversation.id, conversation.otherUser.id, false, true);
     }
-  }, [props, props.conversation, user.id]);
+  }, [conversation.id, conversation.otherUser, props]);
 
   return (
     <Box className={classes.root}>
@@ -71,8 +71,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    readMessage: (conversation, local, isActiveChat) => {
-      dispatch(readMessage(conversation, local, isActiveChat));
+    readMessage: (conversationId, userId, local, isActiveChat) => {
+      dispatch(readMessage(conversationId, userId, local, isActiveChat));
     },
   };
 };

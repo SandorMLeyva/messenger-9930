@@ -55,18 +55,18 @@ const ChatContent = (props) => {
           {otherUser.username}
         </Typography>
         <Typography
-          className={unread ? classes.previewTextUnread: classes.previewText}
+          className={unread ? classes.previewTextUnread : classes.previewText}
         >
           {latestMessageText}
         </Typography>
       </Box>
-      {unread? (
+      {unread && (
         <Box>
           <Typography className={classes.notification}>
             {numberFormatter.format(unreadMessageCount)}
           </Typography>
         </Box>
-      ) : null}
+      )}
     </Box>
   );
 };
