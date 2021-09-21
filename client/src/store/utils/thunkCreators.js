@@ -74,9 +74,12 @@ export const logout = (id) => async (dispatch) => {
 export const fetchConversations = () => async (dispatch) => {
   try {
     const { data } = await axios.get("/api/conversations");
+
+    // Join to each conversation of the user
     data.forEach((convo) => {
       joinToConversation(convo.id);
     });
+    
     dispatch(gotConversations(data));
   } catch (error) {
     console.error(error);
@@ -106,10 +109,14 @@ export const postMessage = (body) => async (dispatch) => {
     const data = await saveMessage(body);
 
     if (!body.conversationId) {
+      // There is a new conversation
       joinToConversation(data.message.conversationId, body.recipientId);
       dispatch(addConversation(body.recipientId, data.message));
+
+      // Wait half a second for the other party to join to the conversation
       setTimeout(() => sendMessage(data), 500);
     } else {
+      // An existing conversation
       dispatch(setNewMessage(true, data.message));
       sendMessage(data);
     }
@@ -122,25 +129,36 @@ export const activeChat = (conversation) => async (dispatch) => {
   try {
     // mark messages as read
     if (conversation.id) {
-      await readMessage(conversation, true, false)(dispatch);
-      dispatch(setActiveChat(conversation.otherUser.id));
+      await readMessage(conversation.id, conversation.otherUser.id, true, false)(dispatch);
     }
+    dispatch(setActiveChat(conversation.otherUser.id));
   } catch (error) {
     console.error(error);
   }
 };
 
-export const readMessage = (conversation, local, isActiveChat) => async (dispatch) => {
-  await axios.post("/api/conversations/mark", {
-    conversationId: conversation.id,
-    user: conversation.otherUser,
-  });
-  socket.emit("read-message", {
-    conversationId: conversation.id,
-    userId: conversation.otherUser.id,
-  });
-  dispatch(readMessages(conversation.id, conversation.otherUser.id, local, isActiveChat));
-};
+export const readMessage =
+  (conversationId, userId, local, isActiveChat) => async (dispatch) => {
+    await axios.post("/api/conversations/mark", {
+      conversationId: conversationId,
+      userId: userId,
+    });
+
+    // Send notification to the other party about msg read
+    socket.emit("read-message", {
+      conversationId: conversationId,
+      userId: userId,
+    });
+
+    dispatch(
+      readMessages(
+        conversationId,
+        userId,
+        local,
+        isActiveChat
+      )
+    );
+  };
 
 export const searchUsers = (searchTerm) => async (dispatch) => {
   try {
