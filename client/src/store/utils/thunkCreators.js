@@ -139,7 +139,7 @@ export const activeChat = (conversation) => async (dispatch) => {
 
 export const readMessage =
   (conversationId, userId, local, isActiveChat) => async (dispatch) => {
-    await axios.post("/api/conversations/mark", {
+    await axios.patch("/api/conversations/read", {
       conversationId: conversationId,
       userId: userId,
     });
