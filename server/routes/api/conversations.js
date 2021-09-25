@@ -84,7 +84,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.post("/mark", async (req, res, next) => {
+router.patch("/read", async (req, res, next) => {
   try {
     if (!req.user) {
       return res.sendStatus(401);
@@ -101,7 +101,7 @@ router.post("/mark", async (req, res, next) => {
       }
     );
 
-    res.json({});
+    res.status(204).send()
   } catch (error) {
     next(error);
   }
