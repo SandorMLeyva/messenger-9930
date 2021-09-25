@@ -90,13 +90,13 @@ router.patch("/read", async (req, res, next) => {
       return res.sendStatus(401);
     }
     
-    const { conversationId, userId } = req.body;
+    const { conversationId } = req.body;
 
     await Message.update(
       { read: true },
       {
         where: {
-          [Op.and]: [{ senderId: userId }, { conversationId: conversationId }],
+          [Op.and]: [{ senderId: req.user.id }, { conversationId: conversationId }],
         },
       }
     );
